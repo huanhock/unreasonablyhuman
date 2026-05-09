@@ -183,33 +183,6 @@ export default function CardDeck({ children }: CardDeckProps) {
         </button>
       )}
 
-      {/* Card counter + dot indicators */}
-      <div
-        className="absolute left-0 right-0 flex flex-col items-center gap-2 pointer-events-none"
-        style={{ bottom: '5rem' }}
-      >
-        <span className="text-xs font-medium text-white/50">
-          {current + 1} / {cards.length}
-        </span>
-      </div>
-      <div
-        className="absolute left-0 right-0 flex justify-center gap-1.5 pointer-events-none"
-        style={{ bottom: '4rem' }}
-      >
-        {cards.map((_, i) => (
-          <button
-            key={i}
-            aria-label={`Go to card ${i + 1}`}
-            onClick={() => goTo(i)}
-            className="pointer-events-auto rounded-full transition-all duration-300"
-            style={{
-              width: i === current ? '0.625rem' : '0.5rem',
-              height: i === current ? '0.625rem' : '0.5rem',
-              background: i === current ? 'rgb(249 115 22)' : 'rgba(255,255,255,0.6)',
-            }}
-          />
-        ))}
-      </div>
     </div>
   );
 }
