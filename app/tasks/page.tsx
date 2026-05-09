@@ -90,7 +90,11 @@ export default function TasksPage() {
 
       <div className="space-y-3">
         {filtered.map((t, i) => (
-          <div key={`${t.task}-${i}`} className="glass p-4">
+          <div
+            key={`${t.task}-${i}`}
+            className="glass animate-fade-in-up p-4"
+            style={{ animationDelay: `${i * 0.05}s` }}
+          >
             <div className="flex items-start gap-3">
               <input
                 type="checkbox"

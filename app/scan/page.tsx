@@ -117,7 +117,7 @@ export default function ScanPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-6 relative">
+    <div className="animate-fade-in-up min-h-screen px-4 py-6 relative">
       <header className="mb-5">
         <p className="text-sm font-semibold uppercase tracking-wide text-orange-500">
           Capture
