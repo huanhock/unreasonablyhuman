@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 
 const NAV_ITEMS = [
-  { label: 'Daily Brief', path: '/' },
+  { label: 'Daily Brief', path: '/brief' },
   { label: 'Tasks', path: '/tasks' },
   { label: 'Clients', path: '/clients' },
   { label: 'Extract Notes', path: '/scan' },
@@ -11,7 +11,7 @@ const NAV_ITEMS = [
 ];
 
 export default function DemoPage() {
-  const [currentPath, setCurrentPath] = useState('/');
+  const [currentPath, setCurrentPath] = useState('/brief');
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   function navigateTo(path: string) {

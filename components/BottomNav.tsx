@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const tabs = [
-  { href: '/', label: 'Daily Brief', icon: '☀️' },
+  { href: '/brief', label: 'Daily Brief', icon: '☀️' },
   { href: '/tasks', label: 'Tasks', icon: '✅' },
   { href: '/scan', label: 'Extract Notes', icon: '📝' },
   { href: '/clients', label: 'Clients', icon: '👥' },
@@ -14,11 +14,13 @@ const tabs = [
 export default function BottomNav() {
   const pathname = usePathname();
 
+  if (pathname === '/' || pathname === '/login' || pathname === '/signup') return null;
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-t border-[var(--color-warm-text)]/10">
       <div className="max-w-md mx-auto flex justify-around items-center h-16">
         {tabs.map((tab) => {
-          const isActive = tab.href === '/' ? pathname === '/' : pathname.startsWith(tab.href);
+          const isActive = pathname.startsWith(tab.href);
           return (
             <Link
               key={tab.href}

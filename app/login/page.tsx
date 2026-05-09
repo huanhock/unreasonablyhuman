@@ -24,7 +24,7 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push('/');
+      router.push('/brief');
       router.refresh();
     }
   }
@@ -48,7 +48,7 @@ export default function LoginPage() {
     } else {
       await fetch('/api/seed', { method: 'POST' });
       await fetch('/api/seed-more', { method: 'POST' });
-      router.push('/');
+      router.push('/brief');
       router.refresh();
     }
   }

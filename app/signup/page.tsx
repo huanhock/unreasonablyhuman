@@ -32,7 +32,7 @@ export default function SignupPage() {
       setLoading(false);
     } else {
       await fetch('/api/seed', { method: 'POST' });
-      router.push('/');
+      router.push('/brief');
       router.refresh();
     }
   }
