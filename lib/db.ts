@@ -142,6 +142,11 @@ export async function toggleTodo(supabase: SupabaseClient, id: string, done: boo
   if (error) throw error;
 }
 
+export async function updateTodoTask(supabase: SupabaseClient, id: string, task: string) {
+  const { error } = await supabase.from('todos').update({ task }).eq('id', id);
+  if (error) throw error;
+}
+
 export function getBirthdaysToday(clients: Client[]): Client[] {
   const now = new Date();
   const todayStr = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;

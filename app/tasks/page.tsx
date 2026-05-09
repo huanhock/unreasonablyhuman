@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { Todo } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
-import { getTodos, toggleTodo } from '@/lib/db';
+import { getTodos, toggleTodo, updateTodoTask } from '@/lib/db';
 
 export default function TasksPage() {
   const [allTasks, setAllTasks] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'pending' | 'completed' | 'all'>('pending');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
 
   useEffect(() => {
     const supabase = createClient();
@@ -25,6 +27,24 @@ export default function TasksPage() {
     setAllTasks(prev => prev.map(t => t.id === task.id ? { ...t, done: newDone } : t));
     const supabase = createClient();
     await toggleTodo(supabase, task.id, newDone);
+  }
+
+  function startEditing(task: Todo) {
+    if (!task.id) return;
+    setEditingId(task.id);
+    setEditText(task.task);
+  }
+
+  async function saveEdit(task: Todo) {
+    if (!task.id || editText.trim() === task.task) {
+      setEditingId(null);
+      return;
+    }
+    const newText = editText.trim();
+    setAllTasks(prev => prev.map(t => t.id === task.id ? { ...t, task: newText } : t));
+    setEditingId(null);
+    const supabase = createClient();
+    await updateTodoTask(supabase, task.id, newText);
   }
 
   const filtered = allTasks.filter(t => {
@@ -84,9 +104,26 @@ export default function TasksPage() {
                   className="mt-1 size-4 rounded border-orange-200 accent-orange-500"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className={`font-semibold text-[#1a1a2e] ${t.done ? 'line-through opacity-50' : ''}`}>
-                    {t.task}
-                  </p>
+                  {editingId === t.id ? (
+                    <input
+                      autoFocus
+                      value={editText}
+                      onChange={e => setEditText(e.target.value)}
+                      onBlur={() => saveEdit(t)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') saveEdit(t);
+                        if (e.key === 'Escape') setEditingId(null);
+                      }}
+                      className="w-full font-semibold text-[#1a1a2e] bg-orange-50 border border-orange-200 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-orange-300"
+                    />
+                  ) : (
+                    <p
+                      onClick={() => startEditing(t)}
+                      className={`font-semibold text-[#1a1a2e] cursor-pointer hover:text-orange-600 transition ${t.done ? 'line-through opacity-50' : ''}`}
+                    >
+                      {t.task}
+                    </p>
+                  )}
                   <div className="flex items-center gap-2 mt-1.5">
                     <Link
                       href={`/clients/${t.clientId}`}
