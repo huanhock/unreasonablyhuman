@@ -29,6 +29,30 @@ export default function LoginPage() {
     }
   }
 
+  async function handleDemoLogin() {
+    setLoading(true);
+    setError('');
+    await fetch('/api/demo-user', { method: 'POST' });
+    const demoEmail = 'aie-demo@unreasonablyhuman.app';
+    const demoPassword = 'test1234';
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: demoEmail,
+      password: demoPassword,
+    });
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      await fetch('/api/seed', { method: 'POST' });
+      await fetch('/api/seed-more', { method: 'POST' });
+      router.push('/');
+      router.refresh();
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
@@ -74,6 +98,21 @@ export default function LoginPage() {
             className="w-full py-3 bg-gradient-to-r from-orange-400 to-rose-400 text-white rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
           >
             {loading ? 'Signing in...' : 'Sign in'}
+          </button>
+
+          <div className="relative flex items-center gap-3 my-2">
+            <div className="flex-1 h-px bg-slate-200" />
+            <span className="text-xs text-slate-400">or</span>
+            <div className="flex-1 h-px bg-slate-200" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            disabled={loading}
+            className="w-full py-3 bg-[#1a1a2e] text-white rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
+          >
+            Try Demo
           </button>
 
           <p className="text-sm text-center text-slate-500">

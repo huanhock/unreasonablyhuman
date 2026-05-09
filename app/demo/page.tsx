@@ -54,15 +54,13 @@ export default function DemoPage() {
             </div>
 
             {/* Screen */}
-            <div className="w-full h-full rounded-[41px] overflow-hidden bg-[#f8f6f3] flex flex-col">
-              <div className="h-[44px] shrink-0" />
+            <div className="w-full h-full rounded-[41px] overflow-hidden bg-[#f8f6f3]">
               <iframe
                 ref={iframeRef}
                 src={currentPath}
-                className="w-full flex-1 border-0"
+                className="w-full h-full border-0"
                 title="UnreasonablyHuman App"
               />
-              <div className="h-[20px] shrink-0" />
             </div>
 
             {/* Home indicator */}
