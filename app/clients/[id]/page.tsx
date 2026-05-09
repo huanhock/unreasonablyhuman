@@ -12,6 +12,7 @@ const statusStyles: Record<Client['status'], string> = {
 };
 
 const budgetTiers: Client['budget'][] = ['$', '$$', '$$$'];
+const statusCycle: Client['status'][] = ['cold', 'warm', 'hot'];
 
 const smallTalkLabels = [
   ['family', 'Family', '👨‍👩‍👧‍👦'],
@@ -52,28 +53,78 @@ function Section({
   );
 }
 
-function PreferenceList({
+function EditableTextarea({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <textarea
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      rows={3}
+      className="min-h-24 w-full resize-none rounded-2xl border border-white/70 bg-white/45 px-3 py-2 text-sm leading-6 text-slate-700 outline-none transition focus:border-orange-300 focus:bg-white/65 focus:ring-4 focus:ring-orange-100"
+    />
+  );
+}
+
+function EditablePreferenceList({
   icon,
   title,
   items,
+  onChange,
 }: {
   icon: string;
   title: string;
   items: string[];
+  onChange: (items: string[]) => void;
 }) {
+  function updateItem(index: number, value: string) {
+    onChange(items.map((item, itemIndex) => (itemIndex === index ? value : item)));
+  }
+
+  function removeItem(index: number) {
+    onChange(items.filter((_, itemIndex) => itemIndex !== index));
+  }
+
   return (
     <div className="rounded-2xl bg-white/45 p-3">
-      <h3 className="font-semibold text-slate-800">
-        {icon} {title}
-      </h3>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-semibold text-slate-800">
+          {icon} {title}
+        </h3>
+        <button
+          type="button"
+          onClick={() => onChange([...items, ''])}
+          className="rounded-full bg-orange-100 px-3 py-1 text-sm font-bold text-orange-700 ring-1 ring-orange-200 transition hover:bg-orange-200"
+          aria-label={`Add ${title.toLowerCase()} item`}
+        >
+          +
+        </button>
+      </div>
+
       {items.length > 0 ? (
-        <ul className="mt-2 space-y-1.5">
-          {items.map((item) => (
-            <li key={item} className="text-slate-700">
-              {item}
-            </li>
+        <div className="mt-2 space-y-2">
+          {items.map((item, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <input
+                value={item}
+                onChange={(event) => updateItem(index, event.target.value)}
+                className="min-w-0 flex-1 rounded-xl border border-white/70 bg-white/55 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-4 focus:ring-orange-100"
+              />
+              <button
+                type="button"
+                onClick={() => removeItem(index)}
+                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/65 text-sm font-bold text-rose-500 ring-1 ring-rose-100 transition hover:bg-rose-50"
+                aria-label={`Remove ${title.toLowerCase()} item`}
+              >
+                ✕
+              </button>
+            </div>
           ))}
-        </ul>
+        </div>
       ) : (
         <p className="mt-2 text-slate-500">Nothing saved yet.</p>
       )}
@@ -81,7 +132,97 @@ function PreferenceList({
   );
 }
 
-function MeetingCard({ meeting }: { meeting: MeetingNote }) {
+function EditableHolidays({
+  holidays,
+  onChange,
+}: {
+  holidays: Client['preferences']['holidays'];
+  onChange: (holidays: Client['preferences']['holidays']) => void;
+}) {
+  function updateHoliday(
+    index: number,
+    field: 'date' | 'destination',
+    value: string
+  ) {
+    onChange(
+      holidays.map((holiday, holidayIndex) =>
+        holidayIndex === index ? { ...holiday, [field]: value } : holiday
+      )
+    );
+  }
+
+  function removeHoliday(index: number) {
+    onChange(holidays.filter((_, holidayIndex) => holidayIndex !== index));
+  }
+
+  return (
+    <div className="rounded-2xl bg-white/45 p-3">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-semibold text-slate-800">✈️ Holidays</h3>
+        <button
+          type="button"
+          onClick={() => onChange([...holidays, { date: '', destination: '' }])}
+          className="rounded-full bg-orange-100 px-3 py-1 text-sm font-bold text-orange-700 ring-1 ring-orange-200 transition hover:bg-orange-200"
+          aria-label="Add holiday"
+        >
+          +
+        </button>
+      </div>
+
+      {holidays.length > 0 ? (
+        <div className="mt-2 space-y-2">
+          {holidays.map((holiday, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)_auto] items-center gap-2"
+            >
+              <input
+                type="date"
+                value={holiday.date}
+                onChange={(event) =>
+                  updateHoliday(index, 'date', event.target.value)
+                }
+                className="min-w-0 rounded-xl border border-white/70 bg-white/55 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-4 focus:ring-orange-100"
+              />
+              <input
+                value={holiday.destination}
+                onChange={(event) =>
+                  updateHoliday(index, 'destination', event.target.value)
+                }
+                placeholder="Destination"
+                className="min-w-0 rounded-xl border border-white/70 bg-white/55 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-4 focus:ring-orange-100"
+              />
+              <button
+                type="button"
+                onClick={() => removeHoliday(index)}
+                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/65 text-sm font-bold text-rose-500 ring-1 ring-rose-100 transition hover:bg-rose-50"
+                aria-label="Remove holiday"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-2 text-slate-500">Nothing saved yet.</p>
+      )}
+    </div>
+  );
+}
+
+function MeetingCard({
+  meeting,
+  meetingIndex,
+  onToggleFollowUp,
+}: {
+  meeting: MeetingNote;
+  meetingIndex: number;
+  onToggleFollowUp: (
+    meetingIndex: number,
+    followUpIndex: number,
+    done: boolean
+  ) => void;
+}) {
   const [expanded, setExpanded] = useState(false);
   const smallTalk = smallTalkLabels.filter(([key]) => meeting.smallTalk[key]);
 
@@ -121,14 +262,21 @@ function MeetingCard({ meeting }: { meeting: MeetingNote }) {
       {expanded ? (
         <div className="border-t border-white/70 p-3">
           <div className="space-y-2">
-            {meeting.followUps.map((followUp) => (
+            {meeting.followUps.map((followUp, followUpIndex) => (
               <label
                 key={followUp.task}
                 className="flex items-start gap-3 rounded-xl bg-white/50 p-3"
               >
                 <input
                   type="checkbox"
-                  defaultChecked={followUp.done}
+                  checked={followUp.done}
+                  onChange={(event) =>
+                    onToggleFollowUp(
+                      meetingIndex,
+                      followUpIndex,
+                      event.target.checked
+                    )
+                  }
                   className="mt-0.5 size-4 rounded border-orange-200 accent-orange-500"
                 />
                 <span className="text-sm text-slate-700">{followUp.task}</span>
@@ -164,6 +312,72 @@ export default function ClientWikiPage({
 }) {
   const { id } = use(params);
   const client = clients.find((candidate) => candidate.id === id);
+  const [status, setStatus] = useState<Client['status']>(
+    client?.status ?? 'warm'
+  );
+  const [howWeMet, setHowWeMet] = useState(client?.howWeMet ?? '');
+  const [needs, setNeeds] = useState(client?.needs ?? '');
+  const [howHelped, setHowHelped] = useState(client?.howHelped ?? '');
+  const [plans, setPlans] = useState(client?.plans ?? '');
+  const [preferences, setPreferences] = useState<Client['preferences']>(
+    client?.preferences ?? { family: [], holidays: [], food: [], hobbies: [] }
+  );
+  const [budget, setBudget] = useState<Client['budget']>(
+    client?.budget ?? '$$'
+  );
+  const [meetingHistory, setMeetingHistory] = useState<MeetingNote[]>(
+    client?.meetingHistory.map((meeting) => ({
+      ...meeting,
+      followUps: meeting.followUps.map((followUp) => ({ ...followUp })),
+      smallTalk: { ...meeting.smallTalk },
+      topics: [...meeting.topics],
+    })) ?? []
+  );
+
+  const pendingFollowUps = meetingHistory.flatMap((meeting, meetingIndex) =>
+    meeting.followUps
+      .map((followUp, followUpIndex) => ({
+        ...followUp,
+        followUpIndex,
+        meetingIndex,
+        meetingDate: meeting.date,
+        meetingLocation: meeting.location,
+      }))
+      .filter((followUp) => !followUp.done)
+  );
+
+  function cycleStatus() {
+    const currentIndex = statusCycle.indexOf(status);
+    setStatus(statusCycle[(currentIndex + 1) % statusCycle.length]);
+  }
+
+  function updatePreferenceList(
+    key: 'family' | 'food' | 'hobbies',
+    items: string[]
+  ) {
+    setPreferences((current) => ({ ...current, [key]: items }));
+  }
+
+  function toggleFollowUp(
+    meetingIndex: number,
+    followUpIndex: number,
+    done: boolean
+  ) {
+    setMeetingHistory((current) =>
+      current.map((meeting, currentMeetingIndex) =>
+        currentMeetingIndex === meetingIndex
+          ? {
+              ...meeting,
+              followUps: meeting.followUps.map((followUp, currentFollowUpIndex) =>
+                currentFollowUpIndex === followUpIndex
+                  ? { ...followUp, done }
+                  : followUp
+              ),
+            }
+          : meeting
+      )
+    );
+  }
 
   if (!client) {
     return (
@@ -211,67 +425,101 @@ export default function ClientWikiPage({
                   {client.company}
                 </p>
               </div>
-              <span
-                className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold capitalize ring-1 ${statusStyles[client.status]}`}
+              <button
+                type="button"
+                onClick={cycleStatus}
+                className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold capitalize ring-1 transition hover:scale-105 ${statusStyles[status]}`}
               >
-                {client.status}
-              </span>
+                {status}
+              </button>
             </div>
-            <p className="mt-4 text-sm italic leading-6 text-slate-600">
-              {client.howWeMet}
-            </p>
+            <input
+              value={howWeMet}
+              onChange={(event) => setHowWeMet(event.target.value)}
+              className="mt-4 w-full rounded-xl border border-white/60 bg-white/40 px-3 py-2 text-sm italic leading-6 text-slate-600 outline-none transition focus:border-orange-300 focus:bg-white/65 focus:ring-4 focus:ring-orange-100"
+            />
           </div>
         </div>
       </header>
 
       <div className="mt-4 space-y-4">
+        {pendingFollowUps.length > 0 ? (
+          <section className="glass border-orange-200 bg-orange-50/70 p-4">
+            <h2 className="text-lg font-bold text-[#1a1a2e]">
+              Pending Follow-ups
+            </h2>
+            <div className="mt-3 space-y-2">
+              {pendingFollowUps.map((followUp) => (
+                <label
+                  key={`${followUp.meetingIndex}-${followUp.followUpIndex}-${followUp.task}`}
+                  className="flex items-start gap-3 rounded-2xl bg-white/65 p-3"
+                >
+                  <input
+                    type="checkbox"
+                    checked={followUp.done}
+                    onChange={(event) =>
+                      toggleFollowUp(
+                        followUp.meetingIndex,
+                        followUp.followUpIndex,
+                        event.target.checked
+                      )
+                    }
+                    className="mt-0.5 size-4 rounded border-orange-200 accent-orange-500"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium text-slate-800">
+                      {followUp.task}
+                    </span>
+                    <span className="mt-1 block text-xs text-slate-500">
+                      {formatDate(followUp.meetingDate)} ·{' '}
+                      {followUp.meetingLocation}
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         <Section title="Needs">
-          <p>{client.needs}</p>
+          <EditableTextarea value={needs} onChange={setNeeds} />
         </Section>
 
         <Section title="How You've Helped">
-          <p>{client.howHelped}</p>
+          <EditableTextarea value={howHelped} onChange={setHowHelped} />
         </Section>
 
         <Section title="Plans">
-          <p>{client.plans}</p>
+          <EditableTextarea value={plans} onChange={setPlans} />
         </Section>
 
         <Section title="Preferences & Interests">
           <div className="space-y-3">
-            <PreferenceList
+            <EditablePreferenceList
               icon="👨‍👩‍👧‍👦"
               title="Family"
-              items={client.preferences.family}
+              items={preferences.family}
+              onChange={(items) => updatePreferenceList('family', items)}
             />
 
-            <div className="rounded-2xl bg-white/45 p-3">
-              <h3 className="font-semibold text-slate-800">✈️ Holidays</h3>
-              {client.preferences.holidays.length > 0 ? (
-                <ul className="mt-2 space-y-1.5">
-                  {client.preferences.holidays.map((holiday) => (
-                    <li
-                      key={`${holiday.date}-${holiday.destination}`}
-                      className="text-slate-700"
-                    >
-                      {formatDate(holiday.date)} to {holiday.destination}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-2 text-slate-500">Nothing saved yet.</p>
-              )}
-            </div>
+            <EditableHolidays
+              holidays={preferences.holidays}
+              onChange={(holidays) =>
+                setPreferences((current) => ({ ...current, holidays }))
+              }
+            />
 
-            <PreferenceList
+            <EditablePreferenceList
               icon="🍽️"
               title="Food"
-              items={client.preferences.food}
+              items={preferences.food}
+              onChange={(items) => updatePreferenceList('food', items)}
             />
-            <PreferenceList
+            <EditablePreferenceList
               icon="🎨"
               title="Hobbies"
-              items={client.preferences.hobbies}
+              items={preferences.hobbies}
+              onChange={(items) => updatePreferenceList('hobbies', items)}
             />
           </div>
         </Section>
@@ -282,8 +530,9 @@ export default function ClientWikiPage({
               <button
                 key={tier}
                 type="button"
+                onClick={() => setBudget(tier)}
                 className={`rounded-full px-4 py-2 text-sm font-bold ring-1 transition ${
-                  tier === client.budget
+                  tier === budget
                     ? 'bg-orange-500 text-white ring-orange-500'
                     : 'bg-white/60 text-slate-600 ring-white/80'
                 }`}
@@ -296,8 +545,13 @@ export default function ClientWikiPage({
 
         <Section title="Meeting History">
           <div className="space-y-3">
-            {client.meetingHistory.map((meeting) => (
-              <MeetingCard key={meeting.id} meeting={meeting} />
+            {meetingHistory.map((meeting, meetingIndex) => (
+              <MeetingCard
+                key={meeting.id}
+                meeting={meeting}
+                meetingIndex={meetingIndex}
+                onToggleFollowUp={toggleFollowUp}
+              />
             ))}
           </div>
         </Section>
