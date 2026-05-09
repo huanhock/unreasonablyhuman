@@ -11,7 +11,6 @@ import CheckinsCard from '@/components/cards/CheckinsCard';
 import NewsCard from '@/components/cards/NewsCard';
 import ClosingCard from '@/components/cards/ClosingCard';
 import AudioPlayer from '@/components/AudioPlayer';
-import PostMeetingPrompt from '@/components/PostMeetingPrompt';
 import SeedPrompt from '@/components/SeedPrompt';
 import CardDeck from '@/components/CardDeck';
 import Onboarding from '@/components/Onboarding';
@@ -59,10 +58,7 @@ export default async function DailyBriefPage() {
   return (
     <>
       <CardDeck>
-        <div className="relative">
-          <PostMeetingPrompt events={events} />
-          <GreetingCard userName={userName} />
-        </div>
+        <GreetingCard userName={userName} />
         <SummaryCard />
         <StatsCard
           clientCount={clientCount}
