@@ -13,12 +13,23 @@ export async function POST() {
   const demoUser = existing?.users?.find(u => u.email === DEMO_EMAIL);
 
   if (!demoUser) {
-    const { error } = await supabase.auth.admin.createUser({
+    const { data: newUser, error } = await supabase.auth.admin.createUser({
       email: DEMO_EMAIL,
       password: DEMO_PASSWORD,
       email_confirm: true,
     });
     if (error) return Response.json({ error: error.message }, { status: 500 });
+    if (newUser?.user) {
+      await supabase.from('profiles').upsert({
+        id: newUser.user.id,
+        display_name: 'David',
+      });
+    }
+  } else {
+    await supabase.from('profiles').upsert({
+      id: demoUser.id,
+      display_name: 'David',
+    });
   }
 
   return Response.json({ email: DEMO_EMAIL, password: DEMO_PASSWORD });
