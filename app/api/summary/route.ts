@@ -22,7 +22,7 @@ function textFromMessage(message: Anthropic.Messages.Message): string {
 export async function POST() {
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 220,
       system:
         'You write warm, concise morning relationship-management briefings. Summarize the day in 2-3 sentences, optimistic and human, with no headers or bullet points.',

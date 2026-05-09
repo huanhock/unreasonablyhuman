@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-[var(--color-warm-bg)] text-[var(--color-warm-text)]`}>
-        <main className="max-w-md mx-auto min-h-screen pb-36">
+        <main className="max-w-md mx-auto min-h-screen pb-20">
           {children}
         </main>
         <BottomNav />

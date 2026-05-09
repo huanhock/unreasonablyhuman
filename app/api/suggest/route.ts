@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     };
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 520,
       system:
         'You are a thoughtful relationship manager. Suggest 2-3 personalized gift ideas and include a warm birthday message draft. Be specific, tasteful, and concise.',

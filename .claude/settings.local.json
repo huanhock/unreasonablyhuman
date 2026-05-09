@@ -9,7 +9,19 @@
       "Bash(npx next *)",
       "Bash(curl -s -o /dev/null -w \" %{http_code}\" http://localhost:3000/scan)",
       "Bash(curl -s -o /dev/null -w \" %{http_code}\" http://localhost:3000/clients)",
-      "Bash(curl -s -o /dev/null -w \" %{http_code}\" http://localhost:3000/notes)"
+      "Bash(curl -s -o /dev/null -w \" %{http_code}\" http://localhost:3000/notes)",
+      "Bash(npx tsc *)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/summary)",
+      "WebSearch",
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(curl *)",
+      "Bash(afplay /tmp/test_audio.wav)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "Bash(npx playwright *)",
+      "Bash(PLAYWRIGHT_BROWSERS_PATH=0 npx @anthropic-ai/claude-code --help)",
+      "Read(//Users/daven/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/mcp/playwright/**)",
+      "Read(//Users/daven/.claude/**)"
     ]
   }
 }

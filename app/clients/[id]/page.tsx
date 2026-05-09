@@ -305,6 +305,76 @@ function MeetingCard({
   );
 }
 
+function MeetingPrepButton({
+  client,
+  needs,
+  howHelped,
+  plans,
+  preferences,
+  meetingHistory,
+}: {
+  client: Client;
+  needs: string;
+  howHelped: string;
+  plans: string;
+  preferences: Client['preferences'];
+  meetingHistory: MeetingNote[];
+}) {
+  const [brief, setBrief] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handlePrepare() {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/prepare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientName: client.name,
+          company: client.company,
+          needs,
+          howHelped,
+          plans,
+          preferences,
+          meetingHistory: meetingHistory.slice(0, 3),
+        }),
+      });
+      const data = await res.json();
+      setBrief(data.brief);
+    } catch {
+      setBrief('Could not generate meeting prep. Please try again.');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <section className="glass p-4 bg-gradient-to-r from-orange-50 to-amber-50">
+      {brief ? (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-[#1a1a2e]">✨ Meeting Prep</h2>
+            <button
+              onClick={() => setBrief(null)}
+              className="text-xs text-slate-500 hover:text-slate-700"
+            >
+              Dismiss
+            </button>
+          </div>
+          <p className="text-sm leading-6 text-slate-700 whitespace-pre-line">{brief}</p>
+        </div>
+      ) : (
+        <button
+          onClick={handlePrepare}
+          disabled={loading}
+          className="w-full py-3 bg-gradient-to-r from-orange-400 to-rose-400 text-white rounded-xl font-semibold text-base hover:opacity-90 disabled:opacity-50 transition-opacity"
+        >
+          {loading ? '✨ Preparing brief...' : '✨ Prepare for Meeting with AI'}
+        </button>
+      )}
+    </section>
+  );
+}
+
 export default function ClientWikiPage({
   params,
 }: {
@@ -443,6 +513,15 @@ export default function ClientWikiPage({
       </header>
 
       <div className="mt-4 space-y-4">
+        <MeetingPrepButton
+          client={client}
+          needs={needs}
+          howHelped={howHelped}
+          plans={plans}
+          preferences={preferences}
+          meetingHistory={meetingHistory}
+        />
+
         {pendingFollowUps.length > 0 ? (
           <section className="glass border-orange-200 bg-orange-50/70 p-4">
             <h2 className="text-lg font-bold text-[#1a1a2e]">

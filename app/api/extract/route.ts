@@ -28,19 +28,8 @@ function parseJsonObject<T>(raw: string): T {
   return JSON.parse(cleaned.slice(start, end + 1)) as T;
 }
 
-export async function POST(request: Request) {
-  try {
-    const { notes } = (await request.json()) as { notes?: string };
-
-    if (!notes?.trim()) {
-      return Response.json({ error: 'notes is required' }, { status: 400 });
-    }
-
-    const clientNames = clients.map((client) => client.name).join(', ');
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 900,
-      system: `Extract raw meeting notes into exactly one JSON object matching this TypeScript schema, with no markdown or commentary:
+const SYSTEM_PROMPT = (clientNames: string) =>
+  `Extract raw meeting notes (text or handwritten image) into exactly one JSON object matching this TypeScript schema, with no markdown or commentary:
 
 {
   "id": "string, create a stable short id if missing",
@@ -58,8 +47,46 @@ export async function POST(request: Request) {
   }
 }
 
-Known clients: ${clientNames}.`,
-      messages: [{ role: 'user', content: notes }],
+Known clients: ${clientNames}.`;
+
+export async function POST(request: Request) {
+  try {
+    const body = (await request.json()) as {
+      notes?: string;
+      image?: string;
+      mimeType?: string;
+    };
+
+    const clientNames = clients.map((client) => client.name).join(', ');
+
+    let userContent: Anthropic.Messages.ContentBlockParam[];
+
+    if (body.image) {
+      userContent = [
+        {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: (body.mimeType || 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+            data: body.image,
+          },
+        },
+        {
+          type: 'text',
+          text: 'Extract structured meeting note data from this handwritten/typed note image.',
+        },
+      ];
+    } else if (body.notes?.trim()) {
+      userContent = [{ type: 'text', text: body.notes }];
+    } else {
+      return Response.json({ error: 'notes or image is required' }, { status: 400 });
+    }
+
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 900,
+      system: SYSTEM_PROMPT(clientNames),
+      messages: [{ role: 'user', content: userContent }],
     });
 
     const extracted = parseJsonObject<MeetingNote>(textFromMessage(message));
