@@ -21,7 +21,9 @@
       "Bash(npx playwright *)",
       "Bash(PLAYWRIGHT_BROWSERS_PATH=0 npx @anthropic-ai/claude-code --help)",
       "Read(//Users/daven/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/mcp/playwright/**)",
-      "Read(//Users/daven/.claude/**)"
+      "Read(//Users/daven/.claude/**)",
+      "Bash(git status *)",
+      "Bash(npx vercel *)"
     ]
   }
 }
