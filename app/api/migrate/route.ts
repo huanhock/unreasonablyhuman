@@ -9,11 +9,11 @@ export async function POST() {
   const newText = 'Send comparison of pre-IPO secondary fund options';
 
   // Update todos — try exact match then fuzzy
-  const { count: todosUpdated } = await supabase
+  const { data: todosUpdated } = await supabase
     .from('todos')
     .update({ task: newText })
     .ilike('task', '%83(b)%')
-    .select('*', { count: 'exact', head: true });
+    .select('*');
 
   // Update meeting_notes follow_ups (jsonb)
   const { data: notes } = await supabase
@@ -33,5 +33,5 @@ export async function POST() {
     }
   }
 
-  return Response.json({ todosUpdated, notesUpdated });
+  return Response.json({ todosUpdated: todosUpdated?.length ?? 0, notesUpdated });
 }
