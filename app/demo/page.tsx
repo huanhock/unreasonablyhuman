@@ -5,9 +5,8 @@ import { useState, useRef } from 'react';
 const NAV_ITEMS = [
   { label: 'Daily Brief', path: '/' },
   { label: 'Tasks', path: '/tasks' },
-  { label: 'Extract Notes', path: '/scan' },
   { label: 'Clients', path: '/clients' },
-  { label: 'Sarah Chen', path: '/clients/sarah-chen' },
+  { label: 'Extract Notes', path: '/scan' },
   { label: 'Meeting Notes', path: '/notes' },
 ];
 
@@ -55,13 +54,15 @@ export default function DemoPage() {
             </div>
 
             {/* Screen */}
-            <div className="w-full h-full rounded-[41px] overflow-hidden bg-[#f8f6f3]">
+            <div className="w-full h-full rounded-[41px] overflow-hidden bg-[#f8f6f3] flex flex-col">
+              <div className="h-[44px] shrink-0" />
               <iframe
                 ref={iframeRef}
                 src={currentPath}
-                className="w-full h-full border-0"
+                className="w-full flex-1 border-0"
                 title="UnreasonablyHuman App"
               />
+              <div className="h-[20px] shrink-0" />
             </div>
 
             {/* Home indicator */}
