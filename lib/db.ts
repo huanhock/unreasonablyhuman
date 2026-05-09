@@ -147,6 +147,18 @@ export async function updateTodoTask(supabase: SupabaseClient, id: string, task:
   if (error) throw error;
 }
 
+export async function updateMeetingFollowUps(
+  supabase: SupabaseClient,
+  noteId: string,
+  followUps: { task: string; done: boolean }[]
+) {
+  const { error } = await supabase
+    .from('meeting_notes')
+    .update({ follow_ups: followUps })
+    .eq('id', noteId);
+  if (error) throw error;
+}
+
 export function getBirthdaysToday(clients: Client[]): Client[] {
   const now = new Date();
   const todayStr = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;

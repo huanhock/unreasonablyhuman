@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { use, useState, useEffect, useCallback } from 'react';
 import type { Client, MeetingNote } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
-import { getClient, updateClient } from '@/lib/db';
+import { getClient, updateClient, updateMeetingFollowUps } from '@/lib/db';
 import { readStream } from '@/lib/stream';
 import { getInitials, getAvatarGradient } from '@/lib/avatar';
 
@@ -255,7 +255,7 @@ function MeetingCard({
         <div className="border-t border-white/70 p-3">
           <div className="space-y-2">
             {meeting.followUps.map((followUp, followUpIndex) => (
-              <label
+              <div
                 key={followUp.task}
                 className="flex items-start gap-3 rounded-xl bg-white/50 p-3"
               >
@@ -272,7 +272,7 @@ function MeetingCard({
                   className="mt-0.5 size-4 rounded border-orange-200 accent-orange-500"
                 />
                 <span className="text-sm text-slate-700">{followUp.task}</span>
-              </label>
+              </div>
             ))}
           </div>
 
@@ -456,25 +456,24 @@ export default function ClientWikiPage({
     setPreferences((current) => ({ ...current, [key]: items }));
   }
 
-  function toggleFollowUp(
+  async function toggleFollowUp(
     meetingIndex: number,
     followUpIndex: number,
     done: boolean
   ) {
+    const meeting = meetingHistory[meetingIndex];
+    const updatedFollowUps = meeting.followUps.map((followUp, i) =>
+      i === followUpIndex ? { ...followUp, done } : followUp
+    );
     setMeetingHistory((current) =>
-      current.map((meeting, currentMeetingIndex) =>
-        currentMeetingIndex === meetingIndex
-          ? {
-              ...meeting,
-              followUps: meeting.followUps.map((followUp, currentFollowUpIndex) =>
-                currentFollowUpIndex === followUpIndex
-                  ? { ...followUp, done }
-                  : followUp
-              ),
-            }
-          : meeting
+      current.map((m, i) =>
+        i === meetingIndex ? { ...m, followUps: updatedFollowUps } : m
       )
     );
+    if (meeting.id) {
+      const supabase = createClient();
+      await updateMeetingFollowUps(supabase, meeting.id, updatedFollowUps);
+    }
   }
 
   if (loading) {
@@ -578,7 +577,7 @@ export default function ClientWikiPage({
             </h2>
             <div className="mt-3 space-y-2">
               {pendingFollowUps.map((followUp) => (
-                <label
+                <div
                   key={`${followUp.meetingIndex}-${followUp.followUpIndex}-${followUp.task}`}
                   className="flex items-start gap-3 rounded-2xl bg-white/65 p-3"
                 >
@@ -603,7 +602,7 @@ export default function ClientWikiPage({
                       {followUp.meetingLocation}
                     </span>
                   </span>
-                </label>
+                </div>
               ))}
             </div>
           </section>
