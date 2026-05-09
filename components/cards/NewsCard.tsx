@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { todayNews } from '@/data/mock';
+import type { NewsItem } from '@/lib/types';
 
-export default function NewsCard() {
+export default function NewsCard({ news }: { news: NewsItem[] }) {
   const [drafts, setDrafts] = useState<Record<string, Record<string, string>>>(
     {}
   );
@@ -56,7 +56,7 @@ export default function NewsCard() {
         📰 Industry News
       </h2>
       <div className="space-y-3">
-        {todayNews.map((item, i) => {
+        {news.map((item, i) => {
           const key = String(i);
           return (
             <div key={i} className="glass p-4">

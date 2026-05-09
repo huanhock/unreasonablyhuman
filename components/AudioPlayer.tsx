@@ -10,14 +10,21 @@ export default function AudioPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
 
-  async function generateAudio() {
+  async function loadAudio() {
     setLoading(true);
     try {
-      const res = await fetch('/api/audio', { method: 'POST' });
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      audioUrlRef.current = url;
+      const cachedRes = await fetch('/daily-brief.mp3', { method: 'HEAD' });
+      let url: string;
 
+      if (cachedRes.ok) {
+        url = '/daily-brief.mp3';
+      } else {
+        const res = await fetch('/api/audio', { method: 'POST' });
+        const blob = await res.blob();
+        url = URL.createObjectURL(blob);
+      }
+
+      audioUrlRef.current = url;
       const audio = new Audio(url);
       audioRef.current = audio;
       audio.playbackRate = speed;
@@ -35,14 +42,14 @@ export default function AudioPlayer() {
       await audio.play();
       setPlaying(true);
     } catch (err) {
-      console.error('Audio generation failed:', err);
+      console.error('Audio failed:', err);
     }
     setLoading(false);
   }
 
   async function togglePlay() {
     if (!audioRef.current && !audioUrlRef.current) {
-      await generateAudio();
+      await loadAudio();
       return;
     }
 
@@ -97,7 +104,7 @@ export default function AudioPlayer() {
               )}
             </button>
             <div className="px-3 py-1 text-sm text-white/80">
-              {loading ? 'Generating...' : playing ? '🔊 Playing' : '🎧 Listen'}
+              {loading ? 'Loading...' : playing ? '🔊 Playing' : '🎧 Listen'}
             </div>
           </div>
         </div>

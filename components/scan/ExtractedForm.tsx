@@ -1,6 +1,6 @@
 'use client';
 
-import { MeetingNote } from '@/data/mock';
+import type { MeetingNote } from '@/lib/types';
 
 interface ExtractedFormProps {
   data: MeetingNote;

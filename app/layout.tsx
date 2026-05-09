@@ -2,12 +2,20 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import BottomNav from '@/components/BottomNav';
+import PageTransition from '@/components/PageTransition';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'UnreasonablyHuman',
   description: 'AI-Augmented Relationship Management',
+  manifest: '/manifest.json',
+  themeColor: '#f97316',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'UnreasonablyHuman',
+  },
 };
 
 export default function RootLayout({
@@ -19,7 +27,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} bg-[var(--color-warm-bg)] text-[var(--color-warm-text)]`}>
         <main className="max-w-md mx-auto min-h-screen pb-20">
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </main>
         <BottomNav />
       </body>

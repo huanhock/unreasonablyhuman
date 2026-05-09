@@ -2,8 +2,9 @@
 
 import { useState, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import { MeetingNote } from '@/data/mock';
-import { saveNote } from '@/lib/store';
+import type { MeetingNote } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
+import { saveMeetingNote } from '@/lib/db';
 import NoteInput from '@/components/scan/NoteInput';
 import ExtractedForm from '@/components/scan/ExtractedForm';
 
@@ -97,16 +98,22 @@ export default function ScanPage() {
     setLoading(false);
   }
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (extracted) {
-      saveNote(extracted);
-      setShowSuccess(true);
-      fireConfetti();
-      setTimeout(() => {
-        setShowSuccess(false);
-        setRawNotes('');
-        setExtracted(null);
-      }, 2500);
+      try {
+        const supabase = createClient();
+        await saveMeetingNote(supabase, extracted);
+        setShowSuccess(true);
+        fireConfetti();
+        setTimeout(() => {
+          setShowSuccess(false);
+          setRawNotes('');
+          setExtracted(null);
+        }, 2500);
+      } catch (err) {
+        console.error('Failed to save note', err);
+        alert('Failed to save note. Please try again.');
+      }
     }
   }, [extracted]);
 

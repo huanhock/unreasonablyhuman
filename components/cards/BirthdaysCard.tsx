@@ -1,14 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { birthdaysToday, birthdaysUpcoming, Client } from '@/data/mock';
+import type { Client } from '@/lib/types';
 import { readStream } from '@/lib/stream';
 
-export default function BirthdaysCard() {
+interface BirthdaysCardProps {
+  birthdaysToday: Client[];
+  birthdaysUpcoming: Client[];
+}
+
+export default function BirthdaysCard({ birthdaysToday, birthdaysUpcoming }: BirthdaysCardProps) {
   const [suggestions, setSuggestions] = useState<Record<string, string>>({});
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  async function handleSuggest(client: Client) {
+  async function handleSuggest(client: Client, isToday: boolean) {
     setLoadingId(client.id);
     try {
       const res = await fetch('/api/suggest', {
@@ -18,7 +23,7 @@ export default function BirthdaysCard() {
           clientName: client.name,
           preferences: client.preferences,
           budget: client.budget,
-          occasion: birthdaysToday.includes(client) ? 'birthday today' : 'birthday upcoming',
+          occasion: isToday ? 'birthday today' : 'birthday upcoming',
         }),
       });
       await readStream(res, (text) => {
@@ -44,7 +49,7 @@ export default function BirthdaysCard() {
                 <p className="mt-2 text-sm text-[var(--color-warm-text)]/80 whitespace-pre-line">{suggestions[client.id]}</p>
               ) : (
                 <button
-                  onClick={() => handleSuggest(client)}
+                  onClick={() => handleSuggest(client, true)}
                   disabled={loadingId === client.id}
                   className="mt-2 px-4 py-1.5 bg-rose-500 text-white rounded-full text-sm hover:bg-rose-600 disabled:opacity-50"
                 >
@@ -66,7 +71,7 @@ export default function BirthdaysCard() {
                 <p className="mt-2 text-sm text-[var(--color-warm-text)]/80 whitespace-pre-line">{suggestions[client.id]}</p>
               ) : (
                 <button
-                  onClick={() => handleSuggest(client)}
+                  onClick={() => handleSuggest(client, false)}
                   disabled={loadingId === client.id}
                   className="mt-2 px-4 py-1.5 bg-orange-400 text-white rounded-full text-sm hover:bg-orange-500 disabled:opacity-50"
                 >

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { todayCalendar, CalendarEvent } from '@/data/mock';
+import type { CalendarEvent } from '@/lib/types';
 
 function parseEventMinutes(time: string) {
   const match = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
@@ -32,7 +32,7 @@ function getClientNameFromTitle(title: string) {
   return parts[1]?.trim() || title;
 }
 
-export default function PostMeetingPrompt() {
+export default function PostMeetingPrompt({ events }: { events: CalendarEvent[] }) {
   const [dismissed, setDismissed] = useState(false);
   const [recentEvent, setRecentEvent] = useState<(CalendarEvent & { eventMinutes: number }) | null>(null);
 
@@ -40,7 +40,7 @@ export default function PostMeetingPrompt() {
     const now = new Date();
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
-    const found = todayCalendar
+    const found = events
       .map((event) => ({
         ...event,
         eventMinutes: parseEventMinutes(event.time) ?? 0,
@@ -55,7 +55,7 @@ export default function PostMeetingPrompt() {
       .sort((a, b) => b.eventMinutes - a.eventMinutes)[0] ?? null;
 
     setRecentEvent(found);
-  }, []);
+  }, [events]);
 
   if (dismissed || !recentEvent) {
     return null;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { MeetingNote } from '@/data/mock';
+import type { MeetingNote } from '@/lib/types';
 
 const personalNoteLabels = [
   ['family', 'Family', '👨‍👩‍👧‍👦'],

@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { use, useState } from 'react';
-import type { Client, MeetingNote } from '@/data/mock';
-import { clients } from '@/data/mock';
+import { use, useState, useEffect, useCallback } from 'react';
+import type { Client, MeetingNote } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
+import { getClient, updateClient } from '@/lib/db';
 import { readStream } from '@/lib/stream';
+import { getInitials, getAvatarGradient } from '@/lib/avatar';
 
 const statusStyles: Record<Client['status'], string> = {
   cold: 'bg-rose-100 text-rose-700 ring-rose-200',
@@ -21,15 +23,6 @@ const smallTalkLabels = [
   ['food', 'Food', '🍽️'],
   ['hobbies', 'Hobbies', '🎨'],
 ] as const;
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 function formatDate(date: string) {
   const [year, month, day] = date.split('-');
@@ -380,28 +373,64 @@ export default function ClientWikiPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const client = clients.find((candidate) => candidate.id === id);
-  const [status, setStatus] = useState<Client['status']>(
-    client?.status ?? 'warm'
-  );
-  const [howWeMet, setHowWeMet] = useState(client?.howWeMet ?? '');
-  const [needs, setNeeds] = useState(client?.needs ?? '');
-  const [howHelped, setHowHelped] = useState(client?.howHelped ?? '');
-  const [plans, setPlans] = useState(client?.plans ?? '');
+  const [client, setClient] = useState<Client | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<Client['status']>('warm');
+  const [howWeMet, setHowWeMet] = useState('');
+  const [needs, setNeeds] = useState('');
+  const [howHelped, setHowHelped] = useState('');
+  const [plans, setPlans] = useState('');
   const [preferences, setPreferences] = useState<Client['preferences']>(
-    client?.preferences ?? { family: [], holidays: [], food: [], hobbies: [] }
+    { family: [], holidays: [], food: [], hobbies: [] }
   );
-  const [budget, setBudget] = useState<Client['budget']>(
-    client?.budget ?? '$$'
-  );
-  const [meetingHistory, setMeetingHistory] = useState<MeetingNote[]>(
-    client?.meetingHistory.map((meeting) => ({
-      ...meeting,
-      followUps: meeting.followUps.map((followUp) => ({ ...followUp })),
-      smallTalk: { ...meeting.smallTalk },
-      topics: [...meeting.topics],
-    })) ?? []
-  );
+  const [budget, setBudget] = useState<Client['budget']>('$$');
+  const [meetingHistory, setMeetingHistory] = useState<MeetingNote[]>([]);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  useEffect(() => {
+    const supabase = createClient();
+    getClient(supabase, id).then((data) => {
+      if (data) {
+        setClient(data);
+        setStatus(data.status);
+        setHowWeMet(data.howWeMet);
+        setNeeds(data.needs);
+        setHowHelped(data.howHelped);
+        setPlans(data.plans);
+        setPreferences(data.preferences);
+        setBudget(data.budget);
+        setMeetingHistory(data.meetingHistory.map((meeting) => ({
+          ...meeting,
+          followUps: meeting.followUps.map((followUp) => ({ ...followUp })),
+          smallTalk: { ...meeting.smallTalk },
+          topics: [...meeting.topics],
+        })));
+      }
+      setLoading(false);
+    });
+  }, [id]);
+
+  const saveChanges = useCallback(async () => {
+    setSaveStatus('saving');
+    const supabase = createClient();
+    await updateClient(supabase, id, {
+      status,
+      howWeMet,
+      needs,
+      howHelped,
+      plans,
+      preferences,
+      budget,
+    });
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus('idle'), 2000);
+  }, [id, status, howWeMet, needs, howHelped, plans, preferences, budget]);
+
+  useEffect(() => {
+    if (!client) return;
+    const timeout = setTimeout(saveChanges, 1000);
+    return () => clearTimeout(timeout);
+  }, [client, saveChanges]);
 
   const pendingFollowUps = meetingHistory.flatMap((meeting, meetingIndex) =>
     meeting.followUps
@@ -448,6 +477,16 @@ export default function ClientWikiPage({
     );
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen px-4 py-6">
+        <div className="glass p-6 text-center animate-pulse">
+          <p className="text-sm text-slate-600">Loading client...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!client) {
     return (
       <div className="min-h-screen px-4 py-6">
@@ -471,16 +510,27 @@ export default function ClientWikiPage({
 
   return (
     <div className="min-h-screen px-4 py-6">
-      <Link
-        href="/clients"
-        className="inline-flex rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-orange-700 ring-1 ring-orange-100 transition hover:bg-orange-50"
-      >
-        Back to clients
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          href="/clients"
+          className="inline-flex rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-orange-700 ring-1 ring-orange-100 transition hover:bg-orange-50"
+        >
+          Back to clients
+        </Link>
+        {saveStatus !== 'idle' && (
+          <span className={`text-xs font-medium px-3 py-1 rounded-full transition-opacity ${
+            saveStatus === 'saving'
+              ? 'text-slate-500 bg-white/60'
+              : 'text-green-700 bg-green-50'
+          }`}>
+            {saveStatus === 'saving' ? 'Saving...' : 'Saved'}
+          </span>
+        )}
+      </div>
 
       <header className="glass mt-4 p-5">
         <div className="flex items-start gap-4">
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-300 via-rose-300 to-amber-200 text-lg font-bold text-white shadow-sm">
+          <div className={`flex size-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${getAvatarGradient(client.name)} text-lg font-bold text-white shadow-sm`}>
             {getInitials(client.name)}
           </div>
 

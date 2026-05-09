@@ -181,7 +181,7 @@ export const clients: Client[] = [
         topics: ['IPO timeline update', 'Stock option exercise window'],
         followUps: [
           { task: 'Model tax scenarios for early exercise', done: true },
-          { task: 'Send comparison of 83(b) election strategies', done: false },
+          { task: 'Send comparison of pre-IPO secondary fund options', done: false },
         ],
         smallTalk: {
           holidays: 'Excited about Bali trip — first time visiting',
@@ -279,7 +279,7 @@ export const todayCalendar: CalendarEvent[] = [
 export const todayTodos: Todo[] = [
   { task: 'Send updated fund prospectus for AI Growth Fund', clientId: 'sarah-chen', clientName: 'Sarah Chen', suggestedTime: '8:00 AM' },
   { task: 'Connect Marcus with VC contact at Sequoia', clientId: 'marcus-rivera', clientName: 'Marcus Rivera', suggestedTime: '2:30 PM' },
-  { task: 'Send comparison of 83(b) election strategies', clientId: 'priya-sharma', clientName: 'Priya Sharma', suggestedTime: '5:00 PM' },
+  { task: 'Send comparison of pre-IPO secondary fund options', clientId: 'priya-sharma', clientName: 'Priya Sharma', suggestedTime: '5:00 PM' },
   { task: 'Review term sheet redlines for Lisa', clientId: 'lisa-wong', clientName: 'Lisa Wong', suggestedTime: '11:30 AM' },
 ];
 

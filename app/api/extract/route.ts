@@ -1,5 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { clients, type MeetingNote } from '@/data/mock';
+import { createClient } from '@/lib/supabase/server';
+import { getClients } from '@/lib/db';
+import type { MeetingNote } from '@/lib/types';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -57,7 +59,9 @@ export async function POST(request: Request) {
       mimeType?: string;
     };
 
-    const clientNames = clients.map((client) => client.name).join(', ');
+    const supabase = await createClient();
+    const clients = await getClients(supabase);
+    const clientNames = clients.map((client) => `${client.name} (id: ${client.id})`).join(', ');
 
     let userContent: Anthropic.Messages.ContentBlockParam[];
 

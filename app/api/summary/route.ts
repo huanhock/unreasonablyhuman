@@ -1,11 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import {
-  birthdaysToday,
-  birthdaysUpcoming,
-  staleClients,
-  todayCalendar,
-  todayTodos,
-} from '@/data/mock';
+import { createClient } from '@/lib/supabase/server';
+import { getClients, getCalendarEvents, getTodos, getBirthdaysToday, getBirthdaysUpcoming, getStaleClients } from '@/lib/db';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -13,6 +8,19 @@ const anthropic = new Anthropic({
 
 export async function POST() {
   try {
+    const supabase = await createClient();
+    const today = new Date().toISOString().split('T')[0];
+
+    const [clients, todayCalendar, todayTodos] = await Promise.all([
+      getClients(supabase),
+      getCalendarEvents(supabase, today),
+      getTodos(supabase, false),
+    ]);
+
+    const birthdaysToday = getBirthdaysToday(clients);
+    const birthdaysUpcoming = getBirthdaysUpcoming(clients);
+    const staleClients = getStaleClients(clients);
+
     const stream = anthropic.messages.stream({
       model: 'claude-sonnet-4-6',
       max_tokens: 220,
@@ -25,9 +33,9 @@ export async function POST() {
             {
               todayCalendar,
               todayTodos,
-              birthdaysToday,
-              birthdaysUpcoming,
-              staleClients,
+              birthdaysToday: birthdaysToday.map(c => ({ name: c.name, company: c.company })),
+              birthdaysUpcoming: birthdaysUpcoming.map(c => ({ name: c.name, company: c.company, birthday: c.birthday })),
+              staleClients: staleClients.map(c => ({ name: c.name, company: c.company, lastContacted: c.lastContacted })),
             },
             null,
             2

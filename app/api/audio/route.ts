@@ -1,13 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
-import {
-  USER_NAME,
-  birthdaysToday,
-  birthdaysUpcoming,
-  staleClients,
-  todayCalendar,
-  todayNews,
-  todayTodos,
-} from '@/data/mock';
+import { createClient } from '@/lib/supabase/server';
+import { getProfile, getClients, getCalendarEvents, getTodos, getBirthdaysToday, getBirthdaysUpcoming, getStaleClients } from '@/lib/db';
+import { todayNews } from '@/data/mock';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -48,6 +42,21 @@ function pcmToWav(pcmData: Buffer, sampleRate: number, numChannels: number, bits
 
 export async function POST() {
   try {
+    const supabase = await createClient();
+    const today = new Date().toISOString().split('T')[0];
+
+    const [profile, clients, todayCalendar, todayTodos] = await Promise.all([
+      getProfile(supabase),
+      getClients(supabase),
+      getCalendarEvents(supabase, today),
+      getTodos(supabase, false),
+    ]);
+
+    const userName = profile?.display_name || 'there';
+    const birthdaysToday = getBirthdaysToday(clients);
+    const birthdaysUpcoming = getBirthdaysUpcoming(clients);
+    const staleClients = getStaleClients(clients);
+
     const narration = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 520,
@@ -58,12 +67,12 @@ export async function POST() {
           role: 'user',
           content: JSON.stringify(
             {
-              USER_NAME,
+              USER_NAME: userName,
               todayCalendar,
               todayTodos,
-              birthdaysToday,
-              birthdaysUpcoming,
-              staleClients,
+              birthdaysToday: birthdaysToday.map(c => ({ name: c.name, company: c.company })),
+              birthdaysUpcoming: birthdaysUpcoming.map(c => ({ name: c.name, company: c.company, birthday: c.birthday })),
+              staleClients: staleClients.map(c => ({ name: c.name, company: c.company, lastContacted: c.lastContacted })),
               todayNews,
             },
             null,

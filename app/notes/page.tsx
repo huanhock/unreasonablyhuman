@@ -1,17 +1,23 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import NoteEntry from '@/components/notes/NoteEntry';
-import { clients } from '@/data/mock';
-import { getAllNotes } from '@/lib/store';
+import type { MeetingNote } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
+import { getMeetingNotes } from '@/lib/db';
 
 export default function NotesPage() {
   const [query, setQuery] = useState('');
-  const mockNotes = useMemo(
-    () => clients.flatMap((client) => client.meetingHistory),
-    []
-  );
-  const allNotes = useMemo(() => getAllNotes(mockNotes), [mockNotes]);
+  const [allNotes, setAllNotes] = useState<MeetingNote[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    getMeetingNotes(supabase).then((data) => {
+      setAllNotes(data);
+      setLoading(false);
+    });
+  }, []);
 
   const filteredNotes = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -59,13 +65,19 @@ export default function NotesPage() {
         />
       </label>
 
-      <div className="space-y-3">
-        {filteredNotes.map((note, i) => (
-          <NoteEntry key={`${note.clientId}-${note.id}-${i}`} note={note} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="glass p-5 text-center text-sm text-slate-600 animate-pulse">
+          Loading notes...
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredNotes.map((note, i) => (
+            <NoteEntry key={`${note.clientId}-${note.id}-${i}`} note={note} />
+          ))}
+        </div>
+      )}
 
-      {filteredNotes.length === 0 ? (
+      {!loading && filteredNotes.length === 0 ? (
         <div className="glass p-5 text-center text-sm text-slate-600">
           No meeting notes match that search.
         </div>

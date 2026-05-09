@@ -1,64 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { clients } from '@/data/mock';
-
-interface TaskItem {
-  task: string;
-  done: boolean;
-  clientId: string;
-  clientName: string;
-  fromMeetingDate: string;
-  fromMeetingLocation: string;
-}
-
-function getAllTasks(): TaskItem[] {
-  const tasks: TaskItem[] = [];
-  for (const client of clients) {
-    for (const meeting of client.meetingHistory) {
-      for (const fu of meeting.followUps) {
-        tasks.push({
-          task: fu.task,
-          done: fu.done,
-          clientId: client.id,
-          clientName: meeting.clientName,
-          fromMeetingDate: meeting.date,
-          fromMeetingLocation: meeting.location,
-        });
-      }
-    }
-  }
-  return tasks;
-}
+import type { Todo } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
+import { getTodos, toggleTodo } from '@/lib/db';
 
 export default function TasksPage() {
-  const allTasks = getAllTasks();
-  const [completed, setCompleted] = useState<Set<string>>(
-    new Set(allTasks.filter(t => t.done).map(t => t.task))
-  );
+  const [allTasks, setAllTasks] = useState<Todo[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'pending' | 'completed' | 'all'>('pending');
 
-  function toggleTask(task: string) {
-    setCompleted(prev => {
-      const next = new Set(prev);
-      if (next.has(task)) {
-        next.delete(task);
-      } else {
-        next.add(task);
-      }
-      return next;
+  useEffect(() => {
+    const supabase = createClient();
+    getTodos(supabase).then((data) => {
+      setAllTasks(data);
+      setLoading(false);
     });
+  }, []);
+
+  async function handleToggle(task: Todo) {
+    if (!task.id) return;
+    const newDone = !task.done;
+    setAllTasks(prev => prev.map(t => t.id === task.id ? { ...t, done: newDone } : t));
+    const supabase = createClient();
+    await toggleTodo(supabase, task.id, newDone);
   }
 
   const filtered = allTasks.filter(t => {
-    if (filter === 'pending') return !completed.has(t.task);
-    if (filter === 'completed') return completed.has(t.task);
+    if (filter === 'pending') return !t.done;
+    if (filter === 'completed') return t.done;
     return true;
   });
 
-  const pendingCount = allTasks.filter(t => !completed.has(t.task)).length;
-  const completedCount = allTasks.filter(t => completed.has(t.task)).length;
+  const pendingCount = allTasks.filter(t => !t.done).length;
+  const completedCount = allTasks.filter(t => t.done).length;
 
   return (
     <div className="min-h-screen px-4 py-6">
@@ -88,47 +64,57 @@ export default function TasksPage() {
         ))}
       </div>
 
-      <div className="space-y-3">
-        {filtered.map((t, i) => (
-          <div
-            key={`${t.task}-${i}`}
-            className="glass animate-fade-in-up p-4"
-            style={{ animationDelay: `${i * 0.05}s` }}
-          >
-            <div className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                checked={completed.has(t.task)}
-                onChange={() => toggleTask(t.task)}
-                className="mt-1 size-4 rounded border-orange-200 accent-orange-500"
-              />
-              <div className="flex-1 min-w-0">
-                <p className={`font-semibold text-[#1a1a2e] ${completed.has(t.task) ? 'line-through opacity-50' : ''}`}>
-                  {t.task}
-                </p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <Link
-                    href={`/clients/${t.clientId}`}
-                    className="text-sm text-orange-600 font-medium hover:underline"
-                  >
-                    {t.clientName}
-                  </Link>
-                  <span className="text-xs text-slate-400">·</span>
-                  <span className="text-xs text-slate-500">
-                    From {t.fromMeetingDate}
-                  </span>
+      {loading ? (
+        <div className="glass p-5 text-center text-sm text-slate-600 animate-pulse">
+          Loading tasks...
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((t, i) => (
+            <div
+              key={t.id || `${t.task}-${i}`}
+              className="glass animate-fade-in-up p-4"
+              style={{ animationDelay: `${i * 0.05}s` }}
+            >
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={t.done}
+                  onChange={() => handleToggle(t)}
+                  className="mt-1 size-4 rounded border-orange-200 accent-orange-500"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className={`font-semibold text-[#1a1a2e] ${t.done ? 'line-through opacity-50' : ''}`}>
+                    {t.task}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <Link
+                      href={`/clients/${t.clientId}`}
+                      className="text-sm text-orange-600 font-medium hover:underline"
+                    >
+                      {t.clientName}
+                    </Link>
+                    {t.suggestedTime && (
+                      <>
+                        <span className="text-xs text-slate-400">·</span>
+                        <span className="text-xs text-slate-500">
+                          Suggested: {t.suggestedTime}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {filtered.length === 0 && (
-          <div className="glass p-5 text-center text-sm text-slate-600">
-            {filter === 'pending' ? 'All caught up! No pending tasks.' : 'No completed tasks yet.'}
-          </div>
-        )}
-      </div>
+          {filtered.length === 0 && (
+            <div className="glass p-5 text-center text-sm text-slate-600">
+              {filter === 'pending' ? 'All caught up! No pending tasks.' : 'No completed tasks yet.'}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

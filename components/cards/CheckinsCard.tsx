@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { staleClients, Client } from '@/data/mock';
+import type { Client } from '@/lib/types';
 import { readStream } from '@/lib/stream';
 
-export default function CheckinsCard() {
+export default function CheckinsCard({ staleClients }: { staleClients: Client[] }) {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [loadingId, setLoadingId] = useState<string | null>(null);
 

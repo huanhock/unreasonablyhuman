@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { USER_NAME } from '@/data/mock';
 
-export default function ClosingCard() {
+export default function ClosingCard({ userName }: { userName: string }) {
   const [today, setToday] = useState('');
 
   useEffect(() => {
@@ -20,7 +19,7 @@ export default function ClosingCard() {
         Have a great day,
       </p>
       <p className="text-4xl font-semibold mt-2 text-center text-[var(--color-warm-text)]">
-        {USER_NAME}
+        {userName}
       </p>
       <p className="mt-6 text-[var(--color-warm-text)]/60 flex items-center gap-2">
         📅 {today}

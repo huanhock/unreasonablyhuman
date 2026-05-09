@@ -1,22 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import type { Client } from '@/data/mock';
+import type { Client } from '@/lib/types';
+import { getInitials, getAvatarGradient } from '@/lib/avatar';
 
 const statusStyles: Record<Client['status'], string> = {
   cold: 'bg-rose-100 text-rose-700 ring-rose-200',
   warm: 'bg-amber-100 text-amber-700 ring-amber-200',
   hot: 'bg-emerald-100 text-emerald-700 ring-emerald-200',
 };
-
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 function formatDate(date: string) {
   const [year, month, day] = date.split('-');
@@ -35,7 +27,7 @@ export default function ClientCard({ client }: ClientCardProps) {
       className="glass block p-4 transition hover:-translate-y-0.5 hover:bg-white/35 focus:outline-none focus:ring-2 focus:ring-orange-300"
     >
       <div className="flex items-center gap-4">
-        <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-300 via-rose-300 to-amber-200 text-base font-bold text-white shadow-sm">
+        <div className={`flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${getAvatarGradient(client.name)} text-base font-bold text-white shadow-sm`}>
           {getInitials(client.name)}
         </div>
 
