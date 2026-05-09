@@ -4,14 +4,6 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-function textFromMessage(message: Anthropic.Messages.Message): string {
-  return message.content
-    .filter((block) => block.type === 'text')
-    .map((block) => block.text)
-    .join('\n')
-    .trim();
-}
-
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
@@ -22,7 +14,7 @@ export async function POST(request: Request) {
       meetingHistory?: unknown;
     };
 
-    const message = await anthropic.messages.create({
+    const stream = anthropic.messages.stream({
       model: 'claude-sonnet-4-6',
       max_tokens: 420,
       system:
@@ -30,7 +22,21 @@ export async function POST(request: Request) {
       messages: [{ role: 'user', content: JSON.stringify(body, null, 2) }],
     });
 
-    return Response.json({ message: textFromMessage(message) });
+    const encoder = new TextEncoder();
+    const readable = new ReadableStream({
+      async start(controller) {
+        for await (const event of stream) {
+          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+            controller.enqueue(encoder.encode(event.delta.text));
+          }
+        }
+        controller.close();
+      },
+    });
+
+    return new Response(readable, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
   } catch (error) {
     console.error('Failed to generate check-in message', error);
     return Response.json(

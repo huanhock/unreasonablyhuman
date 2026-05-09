@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { todayCalendar } from '@/data/mock';
+import { todayCalendar, CalendarEvent } from '@/data/mock';
 
 function parseEventMinutes(time: string) {
   const match = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
@@ -34,22 +34,28 @@ function getClientNameFromTitle(title: string) {
 
 export default function PostMeetingPrompt() {
   const [dismissed, setDismissed] = useState(false);
-  const now = new Date();
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const [recentEvent, setRecentEvent] = useState<(CalendarEvent & { eventMinutes: number }) | null>(null);
 
-  const recentEvent = todayCalendar
-    .map((event) => ({
-      ...event,
-      eventMinutes: parseEventMinutes(event.time),
-    }))
-    .filter(
-      (event) =>
-        event.clientId &&
-        event.eventMinutes !== null &&
-        event.eventMinutes <= nowMinutes &&
-        nowMinutes - event.eventMinutes <= 120
-    )
-    .sort((a, b) => (b.eventMinutes ?? 0) - (a.eventMinutes ?? 0))[0];
+  useEffect(() => {
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const found = todayCalendar
+      .map((event) => ({
+        ...event,
+        eventMinutes: parseEventMinutes(event.time) ?? 0,
+      }))
+      .filter(
+        (event) =>
+          event.clientId &&
+          event.eventMinutes > 0 &&
+          event.eventMinutes <= nowMinutes &&
+          nowMinutes - event.eventMinutes <= 120
+      )
+      .sort((a, b) => b.eventMinutes - a.eventMinutes)[0] ?? null;
+
+    setRecentEvent(found);
+  }, []);
 
   if (dismissed || !recentEvent) {
     return null;

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { use, useState } from 'react';
 import type { Client, MeetingNote } from '@/data/mock';
 import { clients } from '@/data/mock';
+import { readStream } from '@/lib/stream';
 
 const statusStyles: Record<Client['status'], string> = {
   cold: 'bg-rose-100 text-rose-700 ring-rose-200',
@@ -31,11 +32,9 @@ function getInitials(name: string) {
 }
 
 function formatDate(date: string) {
-  return new Intl.DateTimeFormat('en', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(`${date}T00:00:00`));
+  const [year, month, day] = date.split('-');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[Number(month) - 1]} ${Number(day)}, ${year}`;
 }
 
 function Section({
@@ -339,12 +338,12 @@ function MeetingPrepButton({
           meetingHistory: meetingHistory.slice(0, 3),
         }),
       });
-      const data = await res.json();
-      setBrief(data.brief);
+      setLoading(false);
+      await readStream(res, (text) => setBrief(text));
     } catch {
       setBrief('Could not generate meeting prep. Please try again.');
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (

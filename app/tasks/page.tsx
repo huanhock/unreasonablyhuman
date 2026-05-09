@@ -115,7 +115,7 @@ export default function TasksPage() {
                   </Link>
                   <span className="text-xs text-slate-400">·</span>
                   <span className="text-xs text-slate-500">
-                    From {new Date(t.fromMeetingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    From {t.fromMeetingDate}
                   </span>
                 </div>
               </div>

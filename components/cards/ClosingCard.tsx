@@ -1,11 +1,18 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { USER_NAME } from '@/data/mock';
 
 export default function ClosingCard() {
-  const today = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+  const [today, setToday] = useState('');
+
+  useEffect(() => {
+    setToday(new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    }));
+  }, []);
 
   return (
     <div className="min-h-[70vh] rounded-2xl bg-gradient-to-br from-purple-200 via-rose-200 to-amber-200 flex flex-col items-center justify-center p-8 shadow-lg">

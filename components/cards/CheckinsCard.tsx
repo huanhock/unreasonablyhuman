@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { staleClients, Client } from '@/data/mock';
+import { readStream } from '@/lib/stream';
 
 export default function CheckinsCard() {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -21,8 +22,9 @@ export default function CheckinsCard() {
           meetingHistory: client.meetingHistory,
         }),
       });
-      const data = await res.json();
-      setDrafts(prev => ({ ...prev, [client.id]: data.message }));
+      await readStream(res, (text) => {
+        setDrafts(prev => ({ ...prev, [client.id]: text }));
+      });
     } catch {
       setDrafts(prev => ({ ...prev, [client.id]: 'Could not generate message.' }));
     }
@@ -40,7 +42,7 @@ export default function CheckinsCard() {
           <div key={client.id} className="glass p-4">
             <p className="font-semibold text-[var(--color-warm-text)]">{client.name}</p>
             <p className="text-sm text-[var(--color-warm-text)]/70">
-              {client.company} · Last contact: {new Date(client.lastContacted).toLocaleDateString()}
+              {client.company} · Last contact: {client.lastContacted}
             </p>
             {drafts[client.id] ? (
               <p className="mt-2 text-sm text-[var(--color-warm-text)]/80 whitespace-pre-line">{drafts[client.id]}</p>

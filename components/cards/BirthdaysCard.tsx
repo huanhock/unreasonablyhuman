@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { birthdaysToday, birthdaysUpcoming, Client } from '@/data/mock';
+import { readStream } from '@/lib/stream';
 
 export default function BirthdaysCard() {
   const [suggestions, setSuggestions] = useState<Record<string, string>>({});
@@ -20,8 +21,9 @@ export default function BirthdaysCard() {
           occasion: birthdaysToday.includes(client) ? 'birthday today' : 'birthday upcoming',
         }),
       });
-      const data = await res.json();
-      setSuggestions(prev => ({ ...prev, [client.id]: data.suggestion }));
+      await readStream(res, (text) => {
+        setSuggestions(prev => ({ ...prev, [client.id]: text }));
+      });
     } catch {
       setSuggestions(prev => ({ ...prev, [client.id]: 'Could not generate suggestion.' }));
     }

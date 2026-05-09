@@ -11,11 +11,9 @@ const personalNoteLabels = [
 ] as const;
 
 function formatDate(date: string) {
-  return new Intl.DateTimeFormat('en', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(`${date}T00:00:00`));
+  const [year, month, day] = date.split('-');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[Number(month) - 1]} ${Number(day)}, ${year}`;
 }
 
 interface NoteEntryProps {

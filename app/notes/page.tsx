@@ -60,8 +60,8 @@ export default function NotesPage() {
       </label>
 
       <div className="space-y-3">
-        {filteredNotes.map((note) => (
-          <NoteEntry key={note.id} note={note} />
+        {filteredNotes.map((note, i) => (
+          <NoteEntry key={`${note.clientId}-${note.id}-${i}`} note={note} />
         ))}
       </div>
 

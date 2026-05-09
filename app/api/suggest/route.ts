@@ -10,14 +10,6 @@ const budgetLabels: Record<string, string> = {
   $$$: '$100-300',
 };
 
-function textFromMessage(message: Anthropic.Messages.Message): string {
-  return message.content
-    .filter((block) => block.type === 'text')
-    .map((block) => block.text)
-    .join('\n')
-    .trim();
-}
-
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
@@ -27,7 +19,7 @@ export async function POST(request: Request) {
       occasion?: string;
     };
 
-    const message = await anthropic.messages.create({
+    const stream = anthropic.messages.stream({
       model: 'claude-sonnet-4-6',
       max_tokens: 520,
       system:
@@ -49,7 +41,21 @@ export async function POST(request: Request) {
       ],
     });
 
-    return Response.json({ suggestion: textFromMessage(message) });
+    const encoder = new TextEncoder();
+    const readable = new ReadableStream({
+      async start(controller) {
+        for await (const event of stream) {
+          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+            controller.enqueue(encoder.encode(event.delta.text));
+          }
+        }
+        controller.close();
+      },
+    });
+
+    return new Response(readable, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
   } catch (error) {
     console.error('Failed to generate suggestion', error);
     return Response.json(
