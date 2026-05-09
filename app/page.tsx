@@ -56,7 +56,7 @@ export default async function DailyBriefPage() {
   }
 
   return (
-    <>
+    <div className="pb-20">
       <CardDeck>
         <GreetingCard userName={userName} />
         <SummaryCard />
@@ -78,6 +78,6 @@ export default async function DailyBriefPage() {
       </CardDeck>
       <AudioPlayer />
       <Onboarding />
-    </>
+    </div>
   );
 }
